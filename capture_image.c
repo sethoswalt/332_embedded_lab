@@ -7,6 +7,7 @@
 #define FPGA_ONCHIP_BASE      0xC8000000
 
 int picture_count = 0;
+int current_effect = 0;
 
 void add_timestamp(volatile short *Video_Mem_ptr);
 void flip_mirror(volatile short *Video_Mem_ptr);
@@ -25,46 +26,44 @@ int main(void)
 
     while (1)
     {
-        if (*KEY_ptr != 0)  // check if any KEY was pressed
+        if (*KEY_ptr == 0x1)  // First button pressed
         {
             *(Video_In_DMA_ptr + 3) = 0x0;  // Disable the video to capture one frame
-            while (*KEY_ptr != 0);  // wait for pushbutton KEY release
+            while (*KEY_ptr != 0);  // Wait for button release
             picture_count++;
-            break;
-        }
-    }
 
-    while (1)
-    {
-        if (*KEY_ptr != 0)  // check if any KEY was pressed
+            switch (current_effect) {
+                case 0: add_timestamp(Video_Mem_ptr, picture_count); break;
+                case 1: flip_mirror(Video_Mem_ptr); break;
+                case 2: convert_black_and_white(Video_Mem_ptr); break;
+                case 3: invert_pixels(Video_Mem_ptr); break;
+            }
+
+            current_effect = (current_effect + 1) % 4;  // Cycle through effects
+        }
+        
+        if (*KEY_ptr == 0x2)  // Second button pressed
         {
-            break;
+            *(Video_In_DMA_ptr + 3) = 0x4;  // Re-enable the video stream
+            while (*KEY_ptr != 0);  // Wait for button release
         }
     }
-
-    add_timestamp(Video_Mem_ptr);
-    flip_mirror(Video_Mem_ptr);
-    convert_black_and_white(Video_Mem_ptr);
-    invert_pixels(Video_Mem_ptr);
-
-    for (y = 0; y < 240; y++) {
-        for (x = 0; x < 320; x++) {
-            short temp2 = *(Video_Mem_ptr + (y << 9) + x);
-            *(Video_Mem_ptr + (y << 9) + x) = temp2;
-        }
-    }
-
 }
 
-void add_timestamp(volatile short *Video_Mem_ptr) {
+void add_timestamp(volatile short *Video_Mem_ptr, int picture_count) {
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
     char timestamp[20];
     snprintf(timestamp, sizeof(timestamp), "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
     int x, y;
+    char count_str[10];
+    snprintf(count_str, sizeof(count_str), "Img: %d", picture_count);
     for (y = 0; y < 8; y++) {
         for (x = 0; x < 8 * 20; x++) {
-            *(Video_Mem_ptr + (y << 9) + x) = 0xFFFF; // White pixels for timestamp
+            if (x < 8 * 9 && y < 8) { // Display count string
+                *(Video_Mem_ptr + (y << 9) + x) = 0xFFFF;
+            }
+            *(Video_Mem_ptr + (y << 9) + x) = 0xFFFF;
         }
     }
 }
