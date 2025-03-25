@@ -55,7 +55,7 @@ void add_timestamp(volatile short *Video_Mem_ptr, int picture_count) {
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
     char timestamp[20];
-    snprintf(timestamp, sizeof(timestamp), "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
+    snprintf(timestamp, sizeof(timestamp), "%02d/%02d, %02d:%02d:%02d", t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
     int x, y;
     char count_str[10];
     snprintf(count_str, sizeof(count_str), "Img: %d", picture_count);
