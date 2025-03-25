@@ -9,7 +9,7 @@
 int picture_count = 0;
 int current_effect = 0;
 
-void add_timestamp(volatile short *Video_Mem_ptr);
+void add_timestamp(volatile short *Video_Mem_ptr, int count);
 void flip_mirror(volatile short *Video_Mem_ptr);
 void convert_black_and_white(volatile short *Video_Mem_ptr);
 void invert_pixels(volatile short *Video_Mem_ptr);
@@ -34,9 +34,10 @@ int main(void)
 
             switch (current_effect) {
                 case 0: add_timestamp(Video_Mem_ptr, picture_count); break;
-                case 1: flip_mirror(Video_Mem_ptr); break;
-                case 2: convert_black_and_white(Video_Mem_ptr); break;
-                case 3: invert_pixels(Video_Mem_ptr); break;
+                case 1: flip_image(Video_Mem_ptr); break;
+                case 2: mirror_image(Video_Mem_ptr); break;
+                case 3: convert_black_and_white(Video_Mem_ptr); break;
+                case 4: invert_pixels(Video_Mem_ptr); break;
             }
 
             current_effect = (current_effect + 1) % 4;  // Cycle through effects
@@ -67,7 +68,7 @@ void add_timestamp(volatile short *Video_Mem_ptr, int picture_count) {
         }
     }
 }
-
+/*
 void flip_mirror(volatile short *Video_Mem_ptr) {
     int x, y;
     for (y = 0; y < 240; y++) {
@@ -78,6 +79,32 @@ void flip_mirror(volatile short *Video_Mem_ptr) {
         }
     }
 }
+*/
+
+void mirror_image(volatile short *Video_Mem_ptr) {
+    int x, y;
+    for (y = 0; y < 240; y++) {  
+        for (x = 0; x < 160; x++) {  
+            short temp = *(Video_Mem_ptr + (y << 9) + x);
+            *(Video_Mem_ptr + (y << 9) + x) = *(Video_Mem_ptr + (y << 9) + (319 - x));
+            *(Video_Mem_ptr + (y << 9) + (319 - x)) = temp;
+        }
+    }
+}
+
+void flip_image(volatile short *Video_Mem_ptr) {
+    int x, y;
+    for (y = 0; y < 120; y++) {  
+        for (x = 0; x < 320; x++) {  
+            short temp = *(Video_Mem_ptr + (y << 9) + x);
+            *(Video_Mem_ptr + (y << 9) + x) = *(Video_Mem_ptr + ((239 - y) << 9) + x);
+            *(Video_Mem_ptr + ((239 - y) << 9) + x) = temp;
+        }
+    }
+}
+
+
+
 
 void convert_black_and_white(volatile short *Video_Mem_ptr) {
     int x, y;
