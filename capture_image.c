@@ -40,7 +40,7 @@ int main(void)
                 case 4: invert_pixels(Video_Mem_ptr); break;
             }
 
-            current_effect = (current_effect + 1) % 4;  // Cycle through effects
+            current_effect = (current_effect + 1) % 5;  // Cycle through effects
         }
         
         if (*KEY_ptr == 0x2)  // Second button pressed
